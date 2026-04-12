@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Food Delivery Optimization System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav id="mainNav">
+    <div class="nav-inner">
+        <div class="brand">
+            <span class="brand-icon"><i class="bi bi-truck"></i></span>
+            <span class="brand-name">FoodRoute</span>
+        </div>
+        <div class="nav-links">
+            <button id="btn-dashboard" class="nav-btn active" onclick="showSection('dashboard')">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </button>
+            <button id="btn-graph" class="nav-btn" onclick="showSection('graph')">
+                <i class="bi bi-diagram-3"></i> City Graph
+            </button>
+            <button id="btn-orders" class="nav-btn" onclick="showSection('orders')">
+                <i class="bi bi-bag-check"></i> Orders
+            </button>
+            <button id="btn-agents" class="nav-btn" onclick="showSection('agents')">
+                <i class="bi bi-person-badge"></i> Agents
+            </button>
+        </div>
+    </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main-content">
+
+    <!-- ===== DASHBOARD ===== -->
+    <div id="sec-dashboard" class="section active">
+        <div class="sec-header">
+            <h2>Dashboard Overview</h2>
+            <p>Real-time delivery metrics and system status</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon orange"><i class="bi bi-bag-fill"></i></div>
+                <div><p class="stat-label">Total Orders</p><h3 id="stat-total">12</h3></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green"><i class="bi bi-check-circle-fill"></i></div>
+                <div><p class="stat-label">Delivered</p><h3 id="stat-delivered">5</h3></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class="bi bi-person-fill"></i></div>
+                <div><p class="stat-label">Active Agents</p><h3 id="stat-agents">3</h3></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon yellow"><i class="bi bi-clock-fill"></i></div>
+                <div><p class="stat-label">Avg. Delivery</p><h3>18 min</h3></div>
+            </div>
+        </div>
+
+        <div class="two-col">
+            <div class="card-box">
+                <div class="card-head">
+                    <span><i class="bi bi-activity" style="color:#FF6B35"></i> <strong>Recent Activity</strong></span>
+                    <span class="live-badge">Live</span>
+                </div>
+                <div id="activity-feed" style="padding:4px 16px 12px"></div>
+            </div>
+            <div class="card-box">
+                <div class="card-head">
+                    <span><i class="bi bi-exclamation-circle" style="color:#f59e0b"></i> <strong>Urgent Orders</strong></span>
+                </div>
+                <ul id="urgent-list" style="list-style:none;padding:0;margin:0"></ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== CITY GRAPH ===== -->
+    <div id="sec-graph" class="section">
+        <div class="sec-header">
+            <h2>City Graph &amp; Route Finder</h2>
+            <p>Visualize the delivery network and compute shortest paths using Dijkstra's Algorithm</p>
+        </div>
+
+        <div class="graph-layout">
+            <div class="card-box graph-canvas-box">
+                <div class="card-head" style="flex-wrap:wrap;gap:8px">
+                    <span><i class="bi bi-map" style="color:#FF6B35"></i> <strong>Delivery Network</strong></span>
+                    <div class="legend">
+                        <span class="dot" style="background:#FF6B35"></span><small>Restaurant</small>
+                        <span class="dot" style="background:#3B82F6"></span><small>Customer</small>
+                        <span class="dot" style="background:#10B981"></span><small>Intersection</small>
+                        <span class="dot" style="background:#EF4444"></span><small>Shortest Path</small>
+                    </div>
+                </div>
+                <div style="padding:8px">
+                    <canvas id="cityGraph" style="width:100%;border-radius:8px;background:#f1f5f9;display:block"></canvas>
+                </div>
+            </div>
+
+            <div class="graph-sidebar">
+                <div class="card-box" style="margin-bottom:16px">
+                    <div class="card-head"><span><i class="bi bi-search" style="color:#FF6B35"></i> <strong>Find Shortest Path</strong></span></div>
+                    <div style="padding:16px">
+                        <label style="font-size:13px;font-weight:600">From</label>
+                        <select class="form-select form-select-sm mb-3 mt-1" id="startNode"></select>
+                        <label style="font-size:13px;font-weight:600">To</label>
+                        <select class="form-select form-select-sm mt-1 mb-3" id="endNode"></select>
+                        <button class="btn-orange" style="width:100%" onclick="findPath()">
+                            <i class="bi bi-lightning-fill"></i> Find Shortest Path
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card-box" style="margin-bottom:16px" id="routeResultCard">
+                    <div class="card-head"><span><i class="bi bi-signpost-split" style="color:#FF6B35"></i> <strong>Route Result</strong></span></div>
+                    <div id="routeResultContent" style="padding:16px">
+                        <p style="color:#9ca3af;font-size:13px;margin:0">Select locations and click Find to see results here.</p>
+                    </div>
+                </div>
+
+                <div class="card-box">
+                    <div style="padding:12px 16px">
+                        <p style="font-size:13px;margin-bottom:6px"><i class="bi bi-info-circle" style="color:#FF6B35"></i> <strong>Algorithm:</strong> Dijkstra's Shortest Path</p>
+                        <p style="font-size:13px;margin-bottom:6px"><i class="bi bi-graph-up" style="color:#FF6B35"></i> <strong>Nodes:</strong> 8 city locations</p>
+                        <p style="font-size:13px;margin:0"><i class="bi bi-arrows" style="color:#FF6B35"></i> <strong>Edges:</strong> Roads with travel time (min)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== ORDERS ===== -->
+    <div id="sec-orders" class="section">
+        <div class="sec-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+            <div>
+                <h2>Orders Management</h2>
+                <p>Track and manage all delivery orders with priority scheduling</p>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <select class="form-select form-select-sm" id="filterStatus" onchange="renderOrders()" style="width:auto">
+                    <option value="all">All Status</option>
+                    <option value="Pending">Pending</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Delivered">Delivered</option>
+                </select>
+                <select class="form-select form-select-sm" id="filterPriority" onchange="renderOrders()" style="width:auto">
+                    <option value="all">All Priority</option>
+                    <option value="High">High</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
+                </select>
+            </div>
+        </div>
+        <div class="card-box">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">Order ID</th>
+                        <th>Customer</th>
+                        <th>Restaurant</th>
+                        <th>Deadline</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th class="pe-3">Agent</th>
+                    </tr>
+                    </thead>
+                    <tbody id="ordersBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== AGENTS ===== -->
+    <div id="sec-agents" class="section">
+        <div class="sec-header">
+            <h2>Delivery Agents</h2>
+            <p>Monitor agent availability and active assignments</p>
+        </div>
+        <div class="agents-grid" id="agentsGrid"></div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

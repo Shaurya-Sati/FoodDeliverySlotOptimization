@@ -2,10 +2,12 @@ package com.project.scheduler;
 
 import com.project.model.Order;
 import com.project.model.Agent;
+import com.project.graph.Graph;
+import com.project.graph.Dijkstra;
 
 import java.util.*;
 
-// Helper class to track agent availability
+// Helper class
 class AgentStatus implements Comparable<AgentStatus> {
 
     Agent agent;
@@ -24,14 +26,15 @@ class AgentStatus implements Comparable<AgentStatus> {
 
 public class Scheduler {
 
-    public List<String> assignOrders(List<Order> orders, List<Agent> agents) {
+    public List<String> assignOrders(List<Order> orders, List<Agent> agents, Graph graph) {
 
         List<String> result = new ArrayList<>();
+        Dijkstra dijkstra = new Dijkstra();
 
-        // STEP 1: Sort orders by deadline (urgent first)
+        // STEP 1: Sort orders by deadline
         Collections.sort(orders, (a, b) -> a.getDeadline() - b.getDeadline());
 
-        // STEP 2: Create priority queue (earliest free agent first)
+        // STEP 2: Priority Queue for agents
         PriorityQueue<AgentStatus> pq = new PriorityQueue<>();
 
         for (Agent a : agents) {
@@ -42,23 +45,30 @@ public class Scheduler {
         for (Order o : orders) {
 
             AgentStatus current = pq.poll();
+            Agent agent = current.agent;
 
-            // Temporary distance calculation (replace with Dijkstra later)
-            int distance = Math.abs(o.getDeliveryNode() - o.getRestaurantNode());
+            // 🔥 REAL DISTANCES using Dijkstra
+            int toRestaurant = dijkstra.getShortestDistance(
+                    graph,
+                    agent.getCurrentNode(),
+                    o.getRestaurantNode()
+            );
+
+            int toDelivery = dijkstra.getShortestDistance(
+                    graph,
+                    o.getRestaurantNode(),
+                    o.getDeliveryNode()
+            );
+
+            int totalDistance = toRestaurant + toDelivery;
 
             int startTime = current.availableTime;
-            int finishTime = startTime + distance;
+            int finishTime = startTime + totalDistance;
 
-            String status;
-
-            if (finishTime <= o.getDeadline()) {
-                status = "ON TIME";
-            } else {
-                status = "LATE";
-            }
+            String status = (finishTime <= o.getDeadline()) ? "ON TIME" : "LATE";
 
             String output = "Order " + o.getOrderId()
-                    + " → Agent " + current.agent.getAgentId()
+                    + " → Agent " + agent.getAgentId()
                     + " | Start: " + startTime
                     + " | Finish: " + finishTime
                     + " | Deadline: " + o.getDeadline()
@@ -66,10 +76,10 @@ public class Scheduler {
 
             result.add(output);
 
-            // Update agent availability
+            // 🔥 Update agent
             current.availableTime = finishTime;
+            agent.setCurrentNode(o.getDeliveryNode());
 
-            // Put back in queue
             pq.add(current);
         }
 

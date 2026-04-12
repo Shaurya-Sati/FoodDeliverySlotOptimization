@@ -4,48 +4,45 @@ import java.util.*;
 
 public class Dijkstra {
 
-    // Method to find shortest path from source
-    public void shortestPath(Graph graph, int source) {
+    static class Pair {
+        int node;
+        int distance;
 
-        int V = graph.getVertices();
+        Pair(int node, int distance) {
+            this.node = node;
+            this.distance = distance;
+        }
+    }
 
-        // Distance array
+    public int getShortestDistance(Graph g, int src, int dest) {
+
+        int V = g.getVertices();
+        List<List<Graph.Edge>> adj = g.getAdjList();
+
         int[] dist = new int[V];
-
-        // Fill distances with infinity
         Arrays.fill(dist, Integer.MAX_VALUE);
 
-        // Distance to source is 0
-        dist[source] = 0;
+        PriorityQueue<Pair> pq = new PriorityQueue<>(Comparator.comparingInt(a -> a.distance));
 
-        // Min Heap (Priority Queue)
-        PriorityQueue<int[]> pq = new PriorityQueue<>(Comparator.comparingInt(a -> a[1]));
-
-        // Add source
-        pq.add(new int[]{source, 0});
+        dist[src] = 0;
+        pq.add(new Pair(src, 0));
 
         while (!pq.isEmpty()) {
-            int[] current = pq.poll();
-            int node = current[0];
-            int currentDist = current[1];
+            Pair current = pq.poll();
 
-            // Explore neighbors
-            for (Graph.Edge edge : graph.getNeighbors(node)) {
-                int neighbor = edge.destination;
+            int u = current.node;
+
+            for (Graph.Edge edge : adj.get(u)) {
+                int v = edge.destination;
                 int weight = edge.weight;
 
-                // Relaxation step
-                if (currentDist + weight < dist[neighbor]) {
-                    dist[neighbor] = currentDist + weight;
-                    pq.add(new int[]{neighbor, dist[neighbor]});
+                if (dist[u] + weight < dist[v]) {
+                    dist[v] = dist[u] + weight;
+                    pq.add(new Pair(v, dist[v]));
                 }
             }
         }
 
-        // Print result
-        System.out.println("Shortest distances from source " + source + ":");
-        for (int i = 0; i < V; i++) {
-            System.out.println("To node " + i + " -> " + dist[i]);
-        }
+        return dist[dest];
     }
 }

@@ -38,7 +38,9 @@ public class Graph {
     public List<Edge> getNeighbors(int node) {
         return adjList.get(node);
     }
-
+    public List<List<Edge>> getAdjList() {
+        return adjList;
+    }
     // Get total vertices
     public int getVertices() {
         return vertices;
